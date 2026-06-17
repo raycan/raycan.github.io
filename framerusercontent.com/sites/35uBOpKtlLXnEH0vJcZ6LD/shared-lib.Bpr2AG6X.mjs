@@ -1,0 +1,2 @@
+import{t as e}from"./rolldown-runtime.VnHjG-ER.mjs";function t(e,t){return{description:`Made with love from Minneapolis.`,robots:`max-image-preview:large`,title:`Red Cable Studio`}}var n=e((()=>{}));export{t as n,n as t};
+//# sourceMappingURL=shared-lib.Bpr2AG6X.mjs.map

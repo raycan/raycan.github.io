@@ -1,0 +1,16 @@
+/* Additive polish overrides — loaded after Framer's CSS.
+ * Scope: accessibility only (keyboard focus visibility). No visual restyle.
+ * Durable: regenerated into /_polish/ on every build; never edits Framer output. */
+
+/* Visible keyboard focus ring (brand magenta) for links, buttons, and form fields.
+ * :focus-visible only — does not show on mouse click, so no change to normal use. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #e3116c !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}

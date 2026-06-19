@@ -695,7 +695,56 @@
 <svg viewBox="0 0 18 18" id="svg11243054314"><path d="M 5.166 4.267 L 12.241 1.908 C 13.829 1.379 15.054 1.548 15.751 2.246 C 16.448 2.944 16.616 4.171 16.091 5.758 L 13.733 12.833 C 12.15 17.592 9.55 17.592 7.966 12.833 L 7.266 10.733 L 5.166 10.033 C 0.408 8.45 0.408 5.858 5.166 4.267 Z M 7.5 10.5 L 10.5 7.5" fill="transparent" stroke-width="1.5" stroke="var(--token-184247a7-023d-4563-bc35-2061321e627a, rgb(255, 255, 255)) /* {&quot;name&quot;:&quot;inverse&quot;} */" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray=""/></svg>
 </div>
 	<!-- Start of bodyEnd -->
-    
+
+<style id="drift-hero-style">
+  #main{position:relative;z-index:1}
+  /* Reveal the Drift canvas behind Framer's page frame (canvas repaints the same bg) */
+  .framer-72rtr7{background-color:transparent !important}
+  /* Hide the "Hello World" code-component placeholder */
+  .framer-1jew5gt-container{display:none !important}
+  #drift-hero{position:fixed;inset:0;z-index:0;pointer-events:none;background:#f9f8f6}
+  #drift-hero canvas{display:block;width:100%;height:100%}
+</style>
+<div id="drift-hero"><canvas id="drift-canvas" aria-hidden="true"></canvas></div>
+<script>
+(() => {
+  'use strict';
+  const canvas = document.getElementById('drift-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+  const cols = ['#3b362e', '#5e564a', '#857b6c', '#a89c8a']; // warm grayscale
+  const BG = '#f9f8f6', WASH = 'rgba(249,248,246,0.10)';
+  let W = 0, H = 0, dpr = 1, parts = [], raf = 0, running = false;
+  const pointer = { x: -9999, y: -9999, active: false };
+  const targetCount = () => Math.round(Math.min(2200, Math.max(450, (W * H) / 1300)));
+  const spawn = () => ({ x: Math.random()*W, y: Math.random()*H, c: cols[(Math.random()*cols.length)|0], life: 60 + Math.random()*120 });
+  function syncCount(){ const n = targetCount(); while (parts.length < n) parts.push(spawn()); if (parts.length > n) parts.length = n; }
+  function resize(){ dpr = Math.min(devicePixelRatio||1, 2); W = innerWidth; H = innerHeight; canvas.width = Math.round(W*dpr); canvas.height = Math.round(H*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle = BG; ctx.fillRect(0,0,W,H); syncCount(); }
+  function flow(x,y,t){ return Math.sin(x*0.0016+t*0.2) + Math.cos(y*0.0016-t*0.15) + Math.sin((x+y)*0.0009+t*0.1); }
+  function simulate(t){ ctx.globalAlpha=1; ctx.fillStyle=WASH; ctx.fillRect(0,0,W,H); ctx.globalAlpha=0.8;
+    for (let i=0;i<parts.length;i++){ const p=parts[i]; const a=flow(p.x,p.y,t)*Math.PI; let vx=Math.cos(a)*1.1, vy=Math.sin(a)*1.1;
+      if (pointer.active){ const dx=p.x-pointer.x, dy=p.y-pointer.y, d2=dx*dx+dy*dy; if (d2<26000){ const f=(26000-d2)/26000, inv=1/Math.sqrt(d2+1); vx+=dx*inv*f*3; vy+=dy*inv*f*3; } }
+      p.x+=vx; p.y+=vy; p.life--;
+      if (p.x<0||p.x>W||p.y<0||p.y>H||p.life<0){ p.x=Math.random()*W; p.y=Math.random()*H; p.life=60+Math.random()*120; }
+      ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,1.6,1.6); }
+    ctx.globalAlpha=1; }
+  function prewarm(f){ for (let k=0;k<f;k++) simulate(k*0.016); }
+  function loop(time){ simulate(time*0.001); raf=requestAnimationFrame(loop); }
+  function start(){ if (running||reduceMQ.matches) return; running=true; raf=requestAnimationFrame(loop); }
+  function stop(){ running=false; cancelAnimationFrame(raf); }
+  addEventListener('pointermove', e=>{ pointer.x=e.clientX; pointer.y=e.clientY; pointer.active=true; }, {passive:true});
+  addEventListener('pointerleave', ()=>{ pointer.active=false; }, {passive:true});
+  addEventListener('pointercancel', ()=>{ pointer.active=false; }, {passive:true});
+  addEventListener('pointerup', e=>{ if (e.pointerType!=='mouse') pointer.active=false; }, {passive:true});
+  document.addEventListener('visibilitychange', ()=>{ if (document.hidden) stop(); else if (!reduceMQ.matches) start(); });
+  let rt=0; addEventListener('resize', ()=>{ clearTimeout(rt); rt=setTimeout(resize,150); });
+  function render(){ resize(); if (reduceMQ.matches) prewarm(140); else { prewarm(90); start(); } }
+  reduceMQ.addEventListener('change', ()=>{ stop(); ctx.fillStyle=BG; ctx.fillRect(0,0,W,H); render(); });
+  render();
+})();
+</script>
+
     <!-- End of bodyEnd -->
 </body>
 </html>

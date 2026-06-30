@@ -27,3 +27,10 @@ select:focus-visible,
   background-position: center !important;
   background-repeat: no-repeat !important;
 }
+
+/* Dock nav active state — the current route's icon (marked by a11y.js) carries the
+ * same magenta fill as the hover state (#EB1362). Same property as hover, applied
+ * persistently to indicate the current page. */
+.framer-1cbtni5.rc-nav-active {
+  background-color: #EB1362 !important;
+}

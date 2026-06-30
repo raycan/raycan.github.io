@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_3011_12126)">
+<rect width="512" height="512" fill="white" style="fill:white;fill-opacity:1;"/>
+<g clip-path="url(#clip1_3011_12126)">
+<rect x="206" y="206" width="101" height="101" rx="50.5" fill="#FF427B" style="fill:#FF427B;fill:color(display-p3 1.0000 0.2583 0.4808);fill-opacity:1;"/>
+<rect width="512" height="50" fill="white" style="fill:white;fill-opacity:1;"/>
+<rect y="462" width="512" height="50" fill="white" style="fill:white;fill-opacity:1;"/>
+<rect y="50" width="50" height="412" fill="white" style="fill:white;fill-opacity:1;"/>
+<rect x="462" y="50" width="50" height="412" fill="white" style="fill:white;fill-opacity:1;"/>
+<rect x="86" y="85" width="341" height="341" rx="144" stroke="#FF427B" style="stroke:#FF427B;stroke:color(display-p3 1.0000 0.2583 0.4808);stroke-opacity:1;" stroke-width="72"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_3011_12126">
+<rect width="512" height="512" fill="white" style="fill:white;fill-opacity:1;"/>
+</clipPath>
+<clipPath id="clip1_3011_12126">
+<rect width="512" height="512" fill="white" style="fill:white;fill-opacity:1;"/>
+</clipPath>
+</defs>
+</svg>

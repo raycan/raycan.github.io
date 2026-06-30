@@ -1,5 +1,5 @@
 /* Additive polish overrides — loaded after Framer's CSS.
- * Scope: accessibility only (keyboard focus visibility). No visual restyle.
+ * Scope: accessibility (keyboard focus) + targeted, route-scoped content fixes.
  * Durable: regenerated into /_polish/ on every build; never edits Framer output. */
 
 /* Visible keyboard focus ring (brand magenta) for links, buttons, and form fields.
@@ -13,4 +13,17 @@ select:focus-visible,
   outline: 2px solid #e3116c !important;
   outline-offset: 2px !important;
   border-radius: 4px;
+}
+
+/* FORME case study — replace the decorative repeating-pattern section background
+ * with the self-hosted hero photo, responsive (cover crops to fill at any width).
+ * Route-scoped via the forme hydrate routeId so no other page is affected; targets
+ * only the placeholder wrapper (inline svg data-uri), never the real-image wrappers.
+ * !important beats Framer's JS-injected inline background with no load-order race. */
+#main[data-framer-hydrate-v2*="gGeGeJWex"]
+  [data-framer-background-image-wrapper="true"][style*="data:image/svg"] {
+  background-image: url("/forme/forme-hero.jpg") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }

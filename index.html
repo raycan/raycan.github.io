@@ -722,6 +722,11 @@
     background:#0F2C55;color:#fff;font-size:12px;letter-spacing:0.01em;white-space:nowrap}
   #wx-vane .wx-time-colon{font-weight:500}
   #wx-vane .wx-time-zone{font-size:7.74px;margin-left:1px}
+  /* Live wind readout under the time pill: 16-point compass source direction + speed
+     (e.g. "SW - 4 mph"). Direction is emphasized to echo the needle; speed is lighter. */
+  #wx-vane .wx-wind{margin:6px 0 0;font-size:11px;font-weight:600;letter-spacing:0.01em;color:#0F2C55;opacity:0.82;white-space:nowrap}
+  #wx-vane .wx-wind-dir{font-weight:800}
+  #wx-vane .wx-wind-sep{opacity:0.5}
   /* Container scaled to ~95% of the (expanded) viewBox's native units, matching the
      scale Figma itself renders the graphic at -- NOT the original 76x60 viewBox's
      pixel dimensions, since that would reintroduce the rotation-clipping bug (see the
@@ -756,15 +761,23 @@
   <div>
     <p class="wx-city">Minneapolis</p>
     <span class="wx-time"><span id="wx-vane-time">--:--</span><span class="wx-time-zone">*CT</span></span>
+    <p class="wx-wind"><span class="wx-wind-dir" id="wx-vane-dir">—</span><span class="wx-wind-sep"> · </span><span id="wx-vane-speed">— mph</span></p>
   </div>
   <svg viewBox="0 -4 76 80" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="37" cy="36" r="18" stroke="#0F2C55" stroke-width="1.25" stroke-linecap="round" stroke-dasharray="2 4 6 8 6 4"/>
     <path d="M37 0L37.9797 2.63487L40.5355 1.46447L39.3651 4.02033L42 5L39.3651 5.97967L40.5355 8.53553L37.9797 7.36513L37 10L36.0203 7.36513L33.4645 8.53553L34.6349 5.97967L32 5L34.6349 4.02033L33.4645 1.46447L36.0203 2.63487L37 0Z" fill="#0F2C55"/>
+    <!-- Cardinal ticks: E, S, W complete the compass rose (North is the star above).
+         Fixed (outside the needle group) so they stay put as the needle rotates. -->
+    <line x1="57" y1="36" x2="62" y2="36" stroke="#0F2C55" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="12" y1="36" x2="17" y2="36" stroke="#0F2C55" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="37" y1="57" x2="37" y2="62" stroke="#0F2C55" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
     <g id="wx-vane-needle">
       <g id="wx-vane-flutter">
-        <path d="M1 36L7.25 39.6084L7.25 32.3916L1 36ZM73 36.625C73.3452 36.625 73.625 36.3452 73.625 36C73.625 35.6548 73.3452 35.375 73 35.375L73 36L73 36.625ZM6.625 36L6.625 36.625L73 36.625L73 36L73 35.375L6.625 35.375L6.625 36Z" fill="#0F2C55"/>
-        <line x1="35.375" y1="38.375" x2="35.375" y2="33.625" stroke="#0F2C55" stroke-width="1.25" stroke-linecap="round"/>
-        <line x1="38.375" y1="38.375" x2="38.375" y2="33.625" stroke="#0F2C55" stroke-width="1.25" stroke-linecap="round"/>
+        <!-- Bold arrow, as-drawn pointing West (270deg); updateVaneNeedle() rotates it by
+             (dir+90)%360 so it points at the compass source direction. Swallowtail east
+             end, filled hub at the (37,36) pivot. -->
+        <path d="M3 36 L18 28 L18 34 L66 34 L61 36 L66 38 L18 38 L18 44 Z" fill="#0F2C55"/>
+        <circle cx="37" cy="36" r="3" fill="#0F2C55"/>
       </g>
     </g>
   </svg>
@@ -861,7 +874,7 @@
   // pre-existing fixed baseline (velocity multiplier 1.1) per the plan's Key
   // Technical Decisions, so "visually sane" stays a testable bound. ---
   const BASE_VEL = 1.1;
-  const TURB_AMP = 0.35; // noise reduced to bounded turbulence (~+/-30deg typical, +/-60deg peak) around the wind direction
+  const TURB_AMP = 0.24; // bounded turbulence around the wind direction; lowered from 0.35 for a tighter, more directional stream (~+/-20deg typical, +/-40deg peak). Lower = tighter, higher = looser/swirlier.
   const EASE_RATE = 1.2; // per-second convergence -- settles over a few seconds, never snaps
   function mapSpeed(mph){ if (mph == null) return BASE_VEL; const t = Math.min(1, Math.max(0, mph / 30)); return BASE_VEL * (0.5 + t * 1.5); } // clamped 0.55x-2.2x baseline
   // -90deg corrects for the mismatch between compass bearing (0deg=North=screen-up)
@@ -902,6 +915,16 @@
   // not every animation frame, and reduced-motion disables the transition via CSS. ---
   const vaneNeedle = document.getElementById('wx-vane-needle');
   const vaneTimeEl = document.getElementById('wx-vane-time');
+  const vaneDirEl = document.getElementById('wx-vane-dir');
+  const vaneSpeedEl = document.getElementById('wx-vane-speed');
+  // 16-point compass label for the readout. wind.direction is the meteorological
+  // "coming from" bearing -- the same direction the needle points -- so the readout
+  // label and the needle always name the same (source) direction.
+  const COMPASS_16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  function updateVaneReadout(){
+    if (vaneDirEl) vaneDirEl.textContent = wind.direction == null ? '—' : COMPASS_16[Math.round(wind.direction / 22.5) % 16];
+    if (vaneSpeedEl) vaneSpeedEl.textContent = wind.speed == null ? '— mph' : Math.round(wind.speed) + ' mph';
+  }
   function updateVaneNeedle(){
     if (!vaneNeedle) return;
     // As-drawn the needle points West (270deg); +90 maps compass "direction wind is
@@ -916,7 +939,9 @@
     const vaneFlutter = document.getElementById('wx-vane-flutter');
     if (vaneFlutter) {
       const g = Math.min(1, Math.max(0, (wind.gust == null ? 8 : wind.gust) / 40));
-      vaneFlutter.style.setProperty('--vane-jitter-deg', (1 + g * 5) + 'deg');
+      // 1-4deg (was 1-6): the bolder/longer needle sweeps more visibly per degree, so a
+      // smaller amplitude keeps the flutter alive-but-subtle rather than swingy.
+      vaneFlutter.style.setProperty('--vane-jitter-deg', (1 + g * 3) + 'deg');
     }
   }
   const vaneTimeFmt = (() => { try { return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Chicago' }); } catch (e) { return null; } })();
@@ -937,7 +962,7 @@
       }
     }
   }
-  function afterWindUpdate(){ checkStale(); redrawStatic(); updateVaneNeedle(); }
+  function afterWindUpdate(){ checkStale(); redrawStatic(); updateVaneNeedle(); updateVaneReadout(); }
 
   const targetCount = () => Math.round(Math.min(2200, Math.max(450, (W * H) / 1300)));
   const spawn = () => ({ x: Math.random()*W, y: Math.random()*H, c: cols[(Math.random()*cols.length)|0], life: 60 + Math.random()*120 });
@@ -982,6 +1007,7 @@
   render();
   startPolling();
   updateVaneNeedle();
+  updateVaneReadout();
   updateVaneTime(); setInterval(updateVaneTime, 30000);
 })();
 </script>

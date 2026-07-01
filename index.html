@@ -717,16 +717,18 @@
     pointer-events:none;font-family:inherit}
   /* Typography matched to the Figma source (Embedded-Spaces, node 1163:5862): city
      18px/-0.36px tracking, time-pill text 12px/0.12px tracking, CT suffix 7.74px. */
-  #wx-vane .wx-city{margin:0 0 6px;font-weight:800;font-size:16px;letter-spacing:-0.02em;color:#0F2C55}
+  #wx-vane .wx-info{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+  #wx-vane .wx-city{margin:0;font-weight:800;font-size:16px;letter-spacing:-0.02em;color:#0F2C55}
   #wx-vane .wx-time{display:inline-flex;align-items:center;padding:1px 10px;border-radius:16px;
     background:#0F2C55;color:#fff;font-size:12px;letter-spacing:0.01em;white-space:nowrap}
   #wx-vane .wx-time-colon{font-weight:500}
-  #wx-vane .wx-time-zone{font-size:7.74px;margin-left:1px}
-  /* Live wind readout under the time pill: 16-point compass source direction + speed
-     (e.g. "SW - 4 mph"). Direction is emphasized to echo the needle; speed is lighter. */
-  #wx-vane .wx-wind{margin:6px 0 0;font-size:11px;font-weight:600;letter-spacing:0.01em;color:#0F2C55;opacity:0.82;white-space:nowrap}
-  #wx-vane .wx-wind-dir{font-weight:800}
-  #wx-vane .wx-wind-sep{opacity:0.5}
+  #wx-vane .wx-time-zone{font-size:7.74px;margin-left:2px}
+  /* Live wind readout in its own pill, matching the time pill: 16-point compass source
+     direction + speed (e.g. "SE - 7 mph"). Direction slightly heavier than the speed. */
+  #wx-vane .wx-wind{display:inline-flex;align-items:center;padding:1px 10px;border-radius:16px;
+    background:#0F2C55;color:#fff;font-size:12px;letter-spacing:0.01em;white-space:nowrap}
+  #wx-vane .wx-wind-dir{font-weight:700}
+  #wx-vane .wx-wind-sep{opacity:0.6}
   /* Container scaled to ~95% of the (expanded) viewBox's native units, matching the
      scale Figma itself renders the graphic at -- NOT the original 76x60 viewBox's
      pixel dimensions, since that would reintroduce the rotation-clipping bug (see the
@@ -758,10 +760,10 @@
 </style>
 <div id="drift-hero"><canvas id="drift-canvas" aria-hidden="true"></canvas></div>
 <div id="wx-vane" aria-hidden="true">
-  <div>
+  <div class="wx-info">
     <p class="wx-city">Minneapolis</p>
-    <span class="wx-time"><span id="wx-vane-time">--:--</span><span class="wx-time-zone">*CT</span></span>
-    <p class="wx-wind"><span class="wx-wind-dir" id="wx-vane-dir">—</span><span class="wx-wind-sep"> · </span><span id="wx-vane-speed">— mph</span></p>
+    <span class="wx-time"><span id="wx-vane-time">--:--</span><span class="wx-time-zone">CT</span></span>
+    <span class="wx-wind"><span class="wx-wind-dir" id="wx-vane-dir">—</span><span class="wx-wind-sep"> · </span><span id="wx-vane-speed">— mph</span></span>
   </div>
   <svg viewBox="0 -4 76 80" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="37" cy="36" r="18" stroke="#0F2C55" stroke-width="1.25" stroke-linecap="round" stroke-dasharray="2 4 6 8 6 4"/>
@@ -773,11 +775,11 @@
     <line x1="37" y1="57" x2="37" y2="62" stroke="#0F2C55" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
     <g id="wx-vane-needle">
       <g id="wx-vane-flutter">
-        <!-- Bold arrow, as-drawn pointing West (270deg); updateVaneNeedle() rotates it by
+        <!-- Arrow, as-drawn pointing West (270deg); updateVaneNeedle() rotates it by
              (dir+90)%360 so it points at the compass source direction. Swallowtail east
              end, filled hub at the (37,36) pivot. -->
-        <path d="M3 36 L18 28 L18 34 L66 34 L61 36 L66 38 L18 38 L18 44 Z" fill="#0F2C55"/>
-        <circle cx="37" cy="36" r="3" fill="#0F2C55"/>
+        <path d="M4 36 L17 30 L17 34.75 L66 34.75 L62 36 L66 37.25 L17 37.25 L17 42 Z" fill="#0F2C55"/>
+        <circle cx="37" cy="36" r="2.5" fill="#0F2C55"/>
       </g>
     </g>
   </svg>

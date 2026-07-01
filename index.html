@@ -996,11 +996,39 @@
   addEventListener('pointerup', e=>{ if (e.pointerType!=='mouse') pointer.active=false; }, {passive:true});
   document.addEventListener('visibilitychange', ()=>{
     if (document.hidden) { stop(); stopPolling(); }
-    else { if (!reduceMQ.matches) start(); catchupFetch(); }
+    // Only resurrect the loop/polling when returning to a visible HOME tab -- otherwise a
+    // tab refocus on an in-site non-home route would restart the (hidden) animation.
+    else if (isHomeRoute()) { if (!reduceMQ.matches) start(); catchupFetch(); }
   });
   let rt=0; addEventListener('resize', ()=>{ clearTimeout(rt); rt=setTimeout(resize,150); });
   function render(){ resize(); if (reduceMQ.matches) prewarm(140); else { prewarm(90); start(); } }
-  reduceMQ.addEventListener('change', ()=>{ stop(); ctx.fillStyle=BG; ctx.fillRect(0,0,W,H); render(); });
+  reduceMQ.addEventListener('change', ()=>{ stop(); ctx.fillStyle=BG; ctx.fillRect(0,0,W,H); if (isHomeRoute()) render(); });
+  // --- Route gating: #drift-hero and #wx-vane are injected at bodyEnd, OUTSIDE Framer's
+  // client-side-swapped content root, so without this they'd persist on every in-site
+  // (SPA) navigation -- but the weather is a home-only feature. Hide + pause them whenever
+  // the route isn't home; show + resume on return. Direct loads of other pages never
+  // include this markup or script, so this only affects in-site navigation. ---
+  const routeHero = document.getElementById('drift-hero');
+  const routeVane = document.getElementById('wx-vane');
+  function isHomeRoute(){ const p = location.pathname.replace(/\/index\.html$/, '/'); return p === '/' || p === ''; }
+  let onHome = true; // the markup only exists in the home document, so first paint is always home
+  function applyRoute(){
+    const home = isHomeRoute();
+    if (home === onHome) return; // no route change -> nothing to do
+    onHome = home;
+    // Inline display (not the [hidden] attr) -- the #wx-vane{display:flex} ID rule would
+    // out-specify [hidden]{display:none}, so toggle inline display to reliably win.
+    if (routeHero) routeHero.style.display = home ? '' : 'none';
+    if (routeVane) routeVane.style.display = home ? '' : 'none';
+    if (home) { if (!reduceMQ.matches) start(); startPolling(); }
+    else { stop(); stopPolling(); }
+  }
+  // Framer navigates via the History API; patch push/replaceState to emit an event we can
+  // hear, and catch back/forward via popstate.
+  ['pushState','replaceState'].forEach(function(m){ const orig = history[m]; history[m] = function(){ const r = orig.apply(this, arguments); dispatchEvent(new Event('rc:locationchange')); return r; }; });
+  addEventListener('popstate', function(){ dispatchEvent(new Event('rc:locationchange')); });
+  addEventListener('rc:locationchange', applyRoute);
+
   // Load any prior reading before the first prewarm/render so a returning visitor's
   // last-known-good wind informs the very first frame instead of a bare-default flash.
   loadWind(); checkStale();

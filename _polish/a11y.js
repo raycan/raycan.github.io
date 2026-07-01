@@ -1,9 +1,11 @@
-/* Additive accessibility script — names the icon-only nav links that Framer
- * renders without accessible names, and marks the current route's dock icon as
- * active. Re-applies on React re-renders via a MutationObserver, and re-evaluates
+/* Additive accessibility + dock script — names the icon-only nav links that Framer
+ * renders without accessible names, marks the current route's dock icon as active, and
+ * pins the dock to one consistent position across pages (Framer bakes a different
+ * offset + position-type into each page's export, so it lands at a different height per
+ * page). Re-applies on React re-renders via a MutationObserver, on window resize, and
  * on client-side (SPA) navigation since Framer routes the dock via the History API
- * without a full reload. Durable: regenerated into /_polish/ each build; never
- * edits Framer output. */
+ * without a full reload. Durable: regenerated into /_polish/ each build; never edits
+ * Framer output. */
 (function () {
   var MAP = {
     '/': 'Home',
@@ -40,6 +42,44 @@
     });
     for (var i = 0; i < arr.length; i++) arr[i].classList.toggle('rc-nav-active', i === idx);
   }
+  // Dock position normalization. Framer bakes a different offset + position-type into
+  // each page's export (e.g. home absolute ~68px from bottom, /about fixed 32px,
+  // /contact absolute ~86px), so the dock sits at a different height per page. Pin its
+  // positioned wrapper to one consistent spot: desktop/tablet (>=810px) fixed at the
+  // left edge, vertically centered; phone (<=809px) fixed bottom-center. The wrapper has
+  // no stable class across pages/breakpoints, so find it by walking up from the stable
+  // icon class to the nearest positioned ancestor that holds all four icons.
+  function pinDock() {
+    var icons = document.querySelectorAll('.framer-1cbtni5');
+    if (icons.length !== 4) return; // dock not ready / shape changed -> bail safely
+    var wrap = icons[0].parentElement, found = false, guard = 0;
+    while (wrap && guard++ < 12) {
+      var cs = getComputedStyle(wrap);
+      if (cs.position === 'fixed' || cs.position === 'absolute') {
+        var holdsAll = true;
+        for (var i = 0; i < icons.length; i++) { if (!wrap.contains(icons[i])) { holdsAll = false; break; } }
+        if (holdsAll) { found = true; break; }
+      }
+      wrap = wrap.parentElement;
+    }
+    if (!found || !wrap) return;
+    var phone = window.innerWidth <= 809;
+    var s = wrap.style;
+    s.setProperty('position', 'fixed', 'important');
+    s.setProperty('margin', '0', 'important');
+    s.setProperty('right', 'auto', 'important');
+    if (phone) {
+      s.setProperty('left', '50%', 'important');
+      s.setProperty('top', 'auto', 'important');
+      s.setProperty('bottom', '24px', 'important');
+      s.setProperty('transform', 'translateX(-50%)', 'important');
+    } else {
+      s.setProperty('left', '16px', 'important');
+      s.setProperty('top', '50%', 'important');
+      s.setProperty('bottom', 'auto', 'important');
+      s.setProperty('transform', 'translateY(-50%)', 'important');
+    }
+  }
   function label() {
     var links = document.querySelectorAll('a[href]');
     for (var i = 0; i < links.length; i++) {
@@ -51,7 +91,7 @@
       if (MAP[p]) a.setAttribute('aria-label', MAP[p]);
     }
   }
-  function pass() { label(); markActive(); }
+  function pass() { label(); markActive(); pinDock(); }
   // Coalesce bursts of hydration/render mutations into one pass per frame.
   var pending = false;
   function schedule() {
@@ -76,6 +116,8 @@
   // then re-arm a short window to catch the dock's re-render.
   function onNav() { pass(); arm(1500); }
   addEventListener('popstate', onNav);
+  // Re-pin the dock when the viewport crosses the phone/desktop breakpoint.
+  addEventListener('resize', schedule);
   ['pushState', 'replaceState'].forEach(function (m) {
     var orig = history[m];
     if (typeof orig !== 'function') return;

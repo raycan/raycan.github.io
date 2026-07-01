@@ -864,7 +864,13 @@
   const WIND_DIR_BLEND = 0.25; // wind nudges the noise field's lean; the field still dominates texture
   const EASE_RATE = 1.2; // per-second convergence -- settles over a few seconds, never snaps
   function mapSpeed(mph){ if (mph == null) return BASE_VEL; const t = Math.min(1, Math.max(0, mph / 30)); return BASE_VEL * (0.5 + t * 1.5); } // clamped 0.55x-2.2x baseline
-  function mapDirBias(deg){ if (deg == null) return 0; return deg * Math.PI / 180; }
+  // -90deg corrects for the mismatch between compass bearing (0deg=North=screen-up)
+  // and the cos(a)/sin(a) angle space simulate() draws particles in (0=screen-right,
+  // since canvas y increases downward) -- without this offset the particle drift
+  // leans 90deg away from the direction the vane needle actually points for the same
+  // wind reading. Verified against the vane's own (dir+90)%360 CSS-rotate formula at
+  // all 4 cardinal directions -- both now resolve to the same on-screen direction.
+  function mapDirBias(deg){ if (deg == null) return 0; return (deg - 90) * Math.PI / 180; }
   function mapTurbulence(gust){ if (gust == null) return 0; const t = Math.min(1, Math.max(0, gust / 40)); return t * 0.6; } // clamped, small fraction of particle size
 
   let easeSpeedMul = BASE_VEL, easeTurb = 0, easeDirBias = 0, lastEaseT = null;

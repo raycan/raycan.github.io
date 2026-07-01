@@ -783,7 +783,7 @@
   const cols = ['#3b362e', '#5e564a', '#857b6c', '#a89c8a']; // warm grayscale
   const BG = '#f9f8f6', WASH = 'rgba(249,248,246,0.10)';
   let W = 0, H = 0, dpr = 1, parts = [], raf = 0, running = false;
-  const pointer = { x: -9999, y: -9999, active: false };
+  const pointer = { x: -9999, y: -9999, active: false, s: 0 };
 
   // --- Wind data (live Minneapolis wind drives particle motion; see
   // docs/plans/2026-06-30-001-feat-live-wind-drift-visualization-plan.md in the
@@ -962,6 +962,10 @@
   function flow(x,y,t){ return Math.sin(x*0.0016+t*0.2) + Math.cos(y*0.0016-t*0.15) + Math.sin((x+y)*0.0009+t*0.1); }
   function simulate(t){
     updateEase(t);
+    // Ease cursor influence on(1)/off(0) so it fades in and -- the fix -- fades OUT when
+    // the pointer leaves, instead of the last hover spot staying stuck at full strength.
+    pointer.s += ((pointer.active?1:0) - pointer.s) * 0.12;
+    if (pointer.s < 0.002) pointer.s = 0;
     ctx.globalAlpha=1; ctx.fillStyle=WASH; ctx.fillRect(0,0,W,H); ctx.globalAlpha=0.8;
     for (let i=0;i<parts.length;i++){ const p=parts[i];
       // Wind direction is the dominant flow; the noise field is now bounded turbulence
@@ -972,7 +976,7 @@
       let vx=Math.cos(a)*easeSpeedMul, vy=Math.sin(a)*easeSpeedMul;
       // Cursor-pull stays additive and independent of the wind-driven base velocity above,
       // at its original weight, so it stays perceptible during a strong wind lean.
-      if (pointer.active){ const dx=p.x-pointer.x, dy=p.y-pointer.y, d2=dx*dx+dy*dy; if (d2<26000){ const f=(26000-d2)/26000, inv=1/Math.sqrt(d2+1); vx+=dx*inv*f*3; vy+=dy*inv*f*3; } }
+      if (pointer.s){ const dx=p.x-pointer.x, dy=p.y-pointer.y, d2=dx*dx+dy*dy; if (d2<26000){ const f=(26000-d2)/26000*pointer.s, inv=1/Math.sqrt(d2+1); vx+=dx*inv*f*3; vy+=dy*inv*f*3; } }
       p.x+=vx; p.y+=vy; p.life--;
       if (p.x<0||p.x>W||p.y<0||p.y>H||p.life<0){ p.x=Math.random()*W; p.y=Math.random()*H; p.life=60+Math.random()*120; }
       ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,1.6,1.6); }
@@ -985,6 +989,11 @@
   addEventListener('pointerleave', ()=>{ pointer.active=false; }, {passive:true});
   addEventListener('pointercancel', ()=>{ pointer.active=false; }, {passive:true});
   addEventListener('pointerup', e=>{ if (e.pointerType!=='mouse') pointer.active=false; }, {passive:true});
+  // pointerleave on window doesn't reliably fire when the cursor exits the viewport, so
+  // the hover force would otherwise stay stuck at the last spot. mouseout with a null
+  // relatedTarget fires on a genuine viewport exit; blur covers app/tab switches.
+  document.addEventListener('mouseout', e=>{ if (!e.relatedTarget) pointer.active=false; }, {passive:true});
+  addEventListener('blur', ()=>{ pointer.active=false; }, {passive:true});
   document.addEventListener('visibilitychange', ()=>{
     if (document.hidden) { stop(); stopPolling(); }
     // Only resurrect the loop/polling when returning to a visible HOME tab -- otherwise a

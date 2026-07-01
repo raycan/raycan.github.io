@@ -729,7 +729,7 @@
   const POLL_MS = 10 * 60 * 1000;
   const FETCH_TIMEOUT_MS = 8000;
   const STALE_AGE_MS = 60 * 60 * 1000;
-  const wind = { speed: null, direction: null, gust: null, lastSuccessTs: 0, stale: false };
+  const wind = { speed: null, direction: null, gust: null, lastSuccessTs: 0 };
 
   function loadWind(){
     try {
@@ -746,8 +746,11 @@
   }
   // Debug/inspection marker only, by design -- this is a decorative ambient
   // background, not a data dashboard, so staleness has no visitor-facing UI.
-  function syncStaleAttr(){ const el = document.getElementById('drift-hero'); if (el) el.toggleAttribute('data-wind-stale', !!wind.stale); }
-  function checkStale(){ wind.stale = wind.lastSuccessTs > 0 && (Date.now() - wind.lastSuccessTs > STALE_AGE_MS); syncStaleAttr(); }
+  // Computed on read rather than cached, so there's no separate flag to keep in sync.
+  function checkStale(){
+    const el = document.getElementById('drift-hero');
+    if (el) el.toggleAttribute('data-wind-stale', wind.lastSuccessTs > 0 && (Date.now() - wind.lastSuccessTs > STALE_AGE_MS));
+  }
 
   async function fetchWind(){
     const ac = new AbortController();
@@ -764,7 +767,6 @@
       // Fetch-resolution always updates state/storage regardless of visibility or
       // reduced-motion at resolution time; only rendering (added in U2) gates on those.
       wind.speed = speed; wind.direction = direction; wind.gust = gust; wind.lastSuccessTs = Date.now();
-      wind.stale = false;
       saveWind();
     } catch (e) {
       // network error, timeout (AbortController), or malformed JSON -- leave existing
@@ -777,7 +779,10 @@
   let pollTimer = 0, catchupTimer = 0;
   function pollTick(){ fetchWind().then(afterWindUpdate); pollTimer = setTimeout(pollTick, POLL_MS); }
   function startPolling(){ if (pollTimer) return; pollTick(); }
-  function stopPolling(){ clearTimeout(pollTimer); pollTimer = 0; }
+  // Also clears catchupTimer -- otherwise a pending catch-up from a brief visible
+  // window can still fire pollTick() after the tab goes hidden again, silently
+  // resurrecting background polling.
+  function stopPolling(){ clearTimeout(pollTimer); pollTimer = 0; clearTimeout(catchupTimer); catchupTimer = 0; }
   // Resumes the regular polling cadence via a single debounced fetch -- do not also
   // call startPolling() alongside this, or hidden->visible fires two requests.
   function catchupFetch(){ clearTimeout(catchupTimer); catchupTimer = setTimeout(pollTick, 400); }

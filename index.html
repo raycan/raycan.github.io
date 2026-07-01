@@ -791,7 +791,11 @@
   const WIND_URL = 'https://api.open-meteo.com/v1/forecast?latitude=44.9778&longitude=-93.2650&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph';
   const WIND_STORE_KEY = 'rc-wind-v1';
   const WIND_SCHEMA_VERSION = 1;
-  const POLL_MS = 10 * 60 * 1000;
+  // 60s, not the originally-planned 10min -- Open-Meteo's own data doesn't refresh any
+  // faster (~15min), but the needle re-checking and re-orienting every 10min read as
+  // "not following the wind" even with the between-poll flutter cue. Well within
+  // Open-Meteo's free-tier limits (5000/hr) for a low-traffic personal site.
+  const POLL_MS = 60 * 1000;
   const FETCH_TIMEOUT_MS = 8000;
   const STALE_AGE_MS = 60 * 60 * 1000;
   const wind = { speed: null, direction: null, gust: null, lastSuccessTs: 0 };

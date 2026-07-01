@@ -861,7 +861,7 @@
   // pre-existing fixed baseline (velocity multiplier 1.1) per the plan's Key
   // Technical Decisions, so "visually sane" stays a testable bound. ---
   const BASE_VEL = 1.1;
-  const WIND_DIR_BLEND = 0.25; // wind nudges the noise field's lean; the field still dominates texture
+  const TURB_AMP = 0.35; // noise reduced to bounded turbulence (~+/-30deg typical, +/-60deg peak) around the wind direction
   const EASE_RATE = 1.2; // per-second convergence -- settles over a few seconds, never snaps
   function mapSpeed(mph){ if (mph == null) return BASE_VEL; const t = Math.min(1, Math.max(0, mph / 30)); return BASE_VEL * (0.5 + t * 1.5); } // clamped 0.55x-2.2x baseline
   // -90deg corrects for the mismatch between compass bearing (0deg=North=screen-up)
@@ -948,7 +948,10 @@
     updateEase(t);
     ctx.globalAlpha=1; ctx.fillStyle=WASH; ctx.fillRect(0,0,W,H); ctx.globalAlpha=0.8;
     for (let i=0;i<parts.length;i++){ const p=parts[i];
-      let a=flow(p.x,p.y,t)*Math.PI + easeDirBias*WIND_DIR_BLEND;
+      // Wind direction is the dominant flow; the noise field is now bounded turbulence
+      // texture AROUND it (was inverted: noise dominant at +/-540deg, wind a ~14% nudge).
+      // Particles stream in the direction the vane needle points, with organic wobble.
+      let a=easeDirBias + flow(p.x,p.y,t)*TURB_AMP;
       if (easeTurb) a += (Math.random()-0.5)*easeTurb;
       let vx=Math.cos(a)*easeSpeedMul, vy=Math.sin(a)*easeSpeedMul;
       // Cursor-pull stays additive and independent of the wind-driven base velocity above,

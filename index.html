@@ -719,7 +719,20 @@
   #wx-vane .wx-time-zone{font-size:8px;margin-left:1px}
   #wx-vane svg{display:block;width:52px;height:41px}
   #wx-vane #wx-vane-needle{transform-origin:37px 36px;transition:transform 1.2s ease-out}
-  @media (prefers-reduced-motion: reduce){#wx-vane #wx-vane-needle{transition:none}}
+  /* A real weathervane never sits perfectly still -- gusts flutter it even when the
+     10-min-polled average direction hasn't changed. --vane-jitter-deg is set from
+     live gust data in updateVaneNeedle(); the base needle rotation (above) still only
+     moves when new wind data actually lands. */
+  #wx-vane #wx-vane-flutter{transform-origin:37px 36px;--vane-jitter-deg:2deg;
+    animation:wx-vane-flutter 3.4s ease-in-out infinite}
+  @keyframes wx-vane-flutter{
+    0%,100%{transform:rotate(calc(var(--vane-jitter-deg) * -1))}
+    50%{transform:rotate(var(--vane-jitter-deg))}
+  }
+  @media (prefers-reduced-motion: reduce){
+    #wx-vane #wx-vane-needle{transition:none}
+    #wx-vane #wx-vane-flutter{animation:none}
+  }
   /* Below 809px the dock nav moves to a horizontal bar centered near the bottom
      (same breakpoint the site's own Framer CSS uses) -- the bottom-left corner is
      no longer free, so the vane moves to the top-right corner instead. */
@@ -735,9 +748,11 @@
     <circle cx="37" cy="36" r="18" stroke="#0F2C55" stroke-width="1.25" stroke-linecap="round" stroke-dasharray="2 4 6 8 6 4"/>
     <path d="M37 0L37.9797 2.63487L40.5355 1.46447L39.3651 4.02033L42 5L39.3651 5.97967L40.5355 8.53553L37.9797 7.36513L37 10L36.0203 7.36513L33.4645 8.53553L34.6349 5.97967L32 5L34.6349 4.02033L33.4645 1.46447L36.0203 2.63487L37 0Z" fill="#0F2C55"/>
     <g id="wx-vane-needle">
-      <path d="M1 36L7.25 39.6084L7.25 32.3916L1 36ZM73 36.625C73.3452 36.625 73.625 36.3452 73.625 36C73.625 35.6548 73.3452 35.375 73 35.375L73 36L73 36.625ZM6.625 36L6.625 36.625L73 36.625L73 36L73 35.375L6.625 35.375L6.625 36Z" fill="#0F2C55"/>
-      <line x1="35.375" y1="38.375" x2="35.375" y2="33.625" stroke="#0F2C55" stroke-width="1.25" stroke-linecap="round"/>
-      <line x1="38.375" y1="38.375" x2="38.375" y2="33.625" stroke="#0F2C55" stroke-width="1.25" stroke-linecap="round"/>
+      <g id="wx-vane-flutter">
+        <path d="M1 36L7.25 39.6084L7.25 32.3916L1 36ZM73 36.625C73.3452 36.625 73.625 36.3452 73.625 36C73.625 35.6548 73.3452 35.375 73 35.375L73 36L73 36.625ZM6.625 36L6.625 36.625L73 36.625L73 36L73 35.375L6.625 35.375L6.625 36Z" fill="#0F2C55"/>
+        <line x1="35.375" y1="38.375" x2="35.375" y2="33.625" stroke="#0F2C55" stroke-width="1.25" stroke-linecap="round"/>
+        <line x1="38.375" y1="38.375" x2="38.375" y2="33.625" stroke="#0F2C55" stroke-width="1.25" stroke-linecap="round"/>
+      </g>
     </g>
   </svg>
 </div>
@@ -871,6 +886,15 @@
     // at the fixed Star marker (drawn at top / North).
     const deg = wind.direction == null ? 0 : (wind.direction + 90) % 360;
     vaneNeedle.style.transform = `rotate(${deg}deg)`;
+    // Continuous flutter amplitude scales with gust (clamped 1-6deg) -- gustier
+    // conditions visibly shake the needle more, calm conditions barely move it.
+    // wx-vane-flutter's CSS keyframe animation runs continuously regardless of
+    // poll cadence, so the vane always reads as live even between data updates.
+    const vaneFlutter = document.getElementById('wx-vane-flutter');
+    if (vaneFlutter) {
+      const g = Math.min(1, Math.max(0, (wind.gust == null ? 8 : wind.gust) / 40));
+      vaneFlutter.style.setProperty('--vane-jitter-deg', (1 + g * 5) + 'deg');
+    }
   }
   const vaneTimeFmt = (() => { try { return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Chicago' }); } catch (e) { return null; } })();
   function updateVaneTime(){

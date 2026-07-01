@@ -715,7 +715,7 @@
   #wx-vane .wx-city,
   #wx-vane .wx-time,
   #wx-vane .wx-wind{display:inline-flex;align-items:center;margin:0;padding:2px 11px;border-radius:16px;
-    background:#0F2C55;color:#fff;font-size:13px;font-weight:600;letter-spacing:0.01em;white-space:nowrap}
+    background:#191411;color:#fff;font-size:13px;font-weight:600;letter-spacing:0.01em;white-space:nowrap}
   #wx-vane .wx-time-zone{margin-left:3px}
   #wx-vane .wx-wind-sep{opacity:0.55}
   /* Container scaled to ~95% of the (expanded) viewBox's native units, matching the
@@ -755,20 +755,20 @@
     <span class="wx-wind"><span class="wx-wind-dir" id="wx-vane-dir">—</span><span class="wx-wind-sep"> · </span><span id="wx-vane-speed">— mph</span></span>
   </div>
   <svg viewBox="0 -4 76 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="37" cy="36" r="18" stroke="#0F2C55" stroke-width="1.25" stroke-linecap="round" stroke-dasharray="2 4 6 8 6 4"/>
-    <path d="M37 0L37.9797 2.63487L40.5355 1.46447L39.3651 4.02033L42 5L39.3651 5.97967L40.5355 8.53553L37.9797 7.36513L37 10L36.0203 7.36513L33.4645 8.53553L34.6349 5.97967L32 5L34.6349 4.02033L33.4645 1.46447L36.0203 2.63487L37 0Z" fill="#0F2C55"/>
+    <circle cx="37" cy="36" r="18" stroke="#191411" stroke-width="1.25" stroke-linecap="round" stroke-dasharray="2 4 6 8 6 4"/>
+    <path d="M37 0L37.9797 2.63487L40.5355 1.46447L39.3651 4.02033L42 5L39.3651 5.97967L40.5355 8.53553L37.9797 7.36513L37 10L36.0203 7.36513L33.4645 8.53553L34.6349 5.97967L32 5L34.6349 4.02033L33.4645 1.46447L36.0203 2.63487L37 0Z" fill="#191411"/>
     <!-- Cardinal ticks: E, S, W complete the compass rose (North is the star above).
          Fixed (outside the needle group) so they stay put as the needle rotates. -->
-    <line x1="57" y1="36" x2="62" y2="36" stroke="#0F2C55" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
-    <line x1="12" y1="36" x2="17" y2="36" stroke="#0F2C55" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
-    <line x1="37" y1="57" x2="37" y2="62" stroke="#0F2C55" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="57" y1="36" x2="62" y2="36" stroke="#191411" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="12" y1="36" x2="17" y2="36" stroke="#191411" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="37" y1="57" x2="37" y2="62" stroke="#191411" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
     <g id="wx-vane-needle">
       <g id="wx-vane-flutter">
         <!-- Arrow, as-drawn pointing West (270deg); updateVaneNeedle() rotates it by
              (dir+90)%360 so it points at the compass source direction. Swallowtail east
              end, filled hub at the (37,36) pivot. -->
-        <path d="M4 36 L17 30 L17 34.75 L66 34.75 L62 36 L66 37.25 L17 37.25 L17 42 Z" fill="#0F2C55"/>
-        <circle cx="37" cy="36" r="2.5" fill="#0F2C55"/>
+        <path d="M4 36 L17 30 L17 34.75 L66 34.75 L62 36 L66 37.25 L17 37.25 L17 42 Z" fill="#191411"/>
+        <circle cx="37" cy="36" r="2.5" fill="#191411"/>
       </g>
     </g>
   </svg>
